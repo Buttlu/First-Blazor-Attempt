@@ -1,0 +1,81 @@
+﻿﻿@using System;
+@using System.Linq;
+@using System.IO;
+@using System.Xml;
+@using System.Xml.Linq;
+@using System.Collections.Generic;
+<h3>CustomPage</h3>
+<!--make button toggle between divs with the different lists-->
+<button @onclick="MakeDistinct">Toggle Distinct</button>
+<ul>
+    @if (!@unique)
+    {
+        @while (reader.Read())
+        {
+            switch (reader.NodeType)
+            {
+                case XmlNodeType.Element:
+                    if (reader.Name == "lastname")
+                    {
+                        IsLastName();
+                    }
+                    if (reader.Name == "candidates")
+                    {
+                        if (@reader.HasAttributes)
+                        {
+                            getVotes();
+                            getParty();
+                        }
+                    }
+                    break;
+
+                case XmlNodeType.Text:
+                    if (@lastName)
+                    {
+                        <li>@party: @reader.Value (@votes votes)</li>
+                    }
+                    break;
+
+                case XmlNodeType.EndElement:
+                    if (reader.Name == "lastname")
+                    {
+                        IsNotLastName();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    } 
+    else
+    {
+        @foreach (var node in @namesList)
+        {
+            <li>@node</li>
+        }
+    }
+</ul>
+
+@code {
+    private XmlTextReader reader = new XmlTextReader("https://wwwlab.webug.se/examples/XML/electionservice/races/?mode=xml");
+    private bool unique = false, lastName = false;
+    private List<string> namesList = new List<string>();
+    private string votes = "", party = "";
+    protected override async Task OnInitializedAsync()
+    {
+        XmlDocument doc = new XmlDocument();
+        doc.Load("https://wwwlab.webug.se/examples/XML/electionservice/races/?mode=xml");
+        XmlElement root = doc.DocumentElement;
+        XmlNodeList nodes = root.GetElementsByTagName("lastname");
+        namesList = nodes.Cast<XmlNode>()
+            .Select(node => node.InnerText)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+    }
+    private void MakeDistinct() => unique = !unique;
+    private void IsLastName() => lastName = true;
+    private void IsNotLastName() => lastName = false; 
+    private void getVotes() => votes = reader.GetAttribute(1);
+    private void getParty() => party = reader.GetAttribute(0);
+}
