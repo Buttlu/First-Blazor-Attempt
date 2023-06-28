@@ -5,12 +5,14 @@
 @using System.Xml;
 @using System.Xml.Linq;
 @using System.Collections.Generic;
+@inject IJSRuntime JsRuntime
 
 
 <h3>Table Page</h3>
 
 <EditForm Model="@tableForm" OnSubmit="@Handlesubmit">
     <InputSelect @bind-Value="@tableForm.DesiredState">
+        <option>---------</option>
         @foreach (string state in @statesID) {
             <option value="@state">@state</option>
         }
@@ -108,9 +110,9 @@
             }
         }
     }
-    private void Handlesubmit()
+    private async void Handlesubmit()
     {
-        
+        await JsRuntime.InvokeVoidAsync("alert", tableForm.DesiredState);
     }
     private void MakeDistinct() => unique = !unique;
     private void IsLastName() => lastName = true;
