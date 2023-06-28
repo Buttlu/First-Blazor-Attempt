@@ -1,12 +1,38 @@
-﻿﻿@using System;
+﻿@page "/table-page"
+﻿@using System;
 @using System.Linq;
 @using System.IO;
 @using System.Xml;
 @using System.Xml.Linq;
 @using System.Collections.Generic;
-<h3>CustomPage</h3>
+
+
+<h3>Table Page</h3>
+
+<EditForm Model="@tableForm" OnSubmit="@Handlesubmit">
+    <InputSelect @bind-Value="@tableForm.DesiredState">
+        @foreach (string state in @statesID) {
+            <option value="@state">@state</option>
+        }
+    </InputSelect>
+    <button type="submit">Submit</button>
+</EditForm>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Candidate</th>
+            <th>Party</th>
+            <th>Votes</th>
+        </tr>
+        @while (reader.Read()) {
+            
+        }
+    </thead>
+</table>
+
 <!--make button toggle between divs with the different lists-->
-<button @onclick="MakeDistinct">Toggle Distinct</button>
+<!--<button @onclick="MakeDistinct">Toggle Distinct</button>
 <ul>
     @if (!@unique)
     {
@@ -23,8 +49,8 @@
                     {
                         if (@reader.HasAttributes)
                         {
-                            getVotes();
-                            getParty();
+                            reader.GetAttribute(1);
+                            reader.GetAttribute(0);
                         }
                     }
                     break;
@@ -54,13 +80,16 @@
             <li>@node</li>
         }
     }
-</ul>
+</ul>-->
 
 @code {
     private XmlTextReader reader = new XmlTextReader("https://wwwlab.webug.se/examples/XML/electionservice/races/?mode=xml");
+    private TableFormClass tableForm = new();
     private bool unique = false, lastName = false;
     private List<string> namesList = new List<string>();
     private string votes = "", party = "";
+    private int amountOfStates = 0;
+    List<string> statesID = new();
     protected override async Task OnInitializedAsync()
     {
         XmlDocument doc = new XmlDocument();
@@ -72,10 +101,18 @@
             .Distinct()
             .OrderBy(x => x)
             .ToList();
+
+        @while (reader.Read()) {
+            if (reader.NodeType == XmlNodeType.Element && reader.Name == "race") {
+                statesID.Add(reader.GetAttribute(0));
+            }
+        }
+    }
+    private void Handlesubmit()
+    {
+        
     }
     private void MakeDistinct() => unique = !unique;
     private void IsLastName() => lastName = true;
-    private void IsNotLastName() => lastName = false; 
-    private void getVotes() => votes = reader.GetAttribute(1);
-    private void getParty() => party = reader.GetAttribute(0);
+    private void IsNotLastName() => lastName = false;
 }
